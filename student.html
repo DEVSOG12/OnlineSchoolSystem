@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script>
+        if (localStorage.getItem('room')===null||localStorage.getItem('teacher')===true){
+            window.location='./index.html';
+        }
+    </script>
+    <link rel="stylesheet" href="styles/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+          rel="stylesheet">
+    <link rel="stylesheet" href="./styles/chat.css">
+    <style>
+        #teacher div{
+            border-radius:50%;
+        }
+        #whiteboard,#video,#pdf{
+            width: 100%;
+            height: 80vh;
+        }
+        .minimized-video{
+            width: 90%;
+            height:150px;
+            margin: 5px auto;
+        }
+        .minimized-video video{
+            transform: none !important;
+        }
+        #slide-out{
+            transition: transform 0.2s;
+        }
+        #main{
+            transition: margin-left 0.2s;
+        }
+        .hidden{
+            visibility: hidden;
+        }
+        .indicator{
+            display: none !important;
+        }
+        .disabled img{
+            opacity: 0.3 !important;
+        }
+    </style>
+</head>
+<body style="background-image: url(assets/background.jpg);background-size: cover; background-attachment: fixed" >
+<ul id="slide-out" class="sidenav sidenav-fixed" style="transform: translateX(-300px);">
+    <h5 class="center-align">My video</h5>
+    <div id="me" class="minimized-video"></div>
+    <div id="remote" refs="remote" class="minimized-video"></div>
+</ul>
+<div id="main" class="row" style="margin-left: 0px;">
+    <div class="col s12" style="padding: 0;margin-bottom: 15px;background-color: #fff">
+        <button id="trigger" class="btn-flat hide"><i class="material-icons">group</i></button>
+        <ul id="tab" class="tabs" style="width: calc(100% - 150px);display: inline-flex;">
+            <li class="tab col s3 hidden"><a href="#test1">Whiteboard</a></li>
+            <li class="tab col s3 hidden"><a href="#test2">Video</a></li>
+            <li class="tab col s3 hidden"><a href="#test3">PDF</a></li>
+        </ul>
+        <button id="raise" ref="raise" :class="{disabled : isRaiseBtnDisabled}" @click="raiseRequest" class="btn-flat tooltipped" data-position="bottom" data-tooltip="Raise a hand">
+            <img src="./assets/hand.svg" style="vertical-align: middle;opacity: 0.79;" alt="">
+        </button>
+        <button class="btn-flat tooltipped" onclick="leave();" data-position="bottom" data-tooltip="Logout">
+            <i class="material-icons">input</i>
+        </button>
+    </div>
+    <p style="margin-top:0;margin-left: 10px;color: white">Welcome to the class {{channel}} !</p>
+    <div id="test1" class="col s9">
+        <div>
+            <div v-if="whiteboard" ref="whiteboard" id="whiteboard" class="material-boxed"></div>
+        </div>
+    </div>
+    <div id="test2" class="col s9">
+        <div>
+            <div v-if="video" ref="video" id="video" class="material-boxed"></div>
+        </div>
+    </div>
+    <div id="test3" class="col s9">
+        <div>
+            <div v-if="pdf" ref="pdf" id="pdf" class="material-boxed"></div>
+        </div>
+    </div>
+    <div class="col s3">
+        <div v-if="teacher" ref="teacher" id="teacher" style="height: 200px; width:200px; transform: rotateY(180deg);margin:0 auto;"></div>
+        <div id="chat" class="card-panel">
+            <div id="scrollWrap" ref="scroll">
+                <div v-for="msg in messages" class="messageWrap">
+                    <div class="message"
+                         :class="{'user':msg.isLocal, 'bot':!msg.isLocal, 'teacher': msg.isTeacher, 'student':!msg.isTeacher}">
+                        <span class="message-text">
+                            {{msg.usr}}<hr>
+                            {{msg.message}}
+                        </span>
+                        <div class="triangle"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="inputWrap">
+                <div id="input" class="input-field col s12" style="position: relative;">
+                    <div class="circle-wrap">
+                        <input :class="{disabled:disabled}" @keyup.enter="sendMsg()" v-model="text" id="typeMsg" type="text" placeholder="Type ...">
+                    </div>
+                    <a id="send" :class="{disabled:disabled}" @click="sendMsg()" class="btn btn-floating"><i class="material-icons">send</i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<!--    <script src="https://unpkg.com/vuex@3.1.1/dist/vuex.js"></script>-->
+    <script src="https://www.gstatic.com/firebasejs/6.5.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/6.3.5/firebase-database.js"></script>
+    <script src="vendor/AgoraRTCSDK-2.8.0.js"></script>
+<script src="vendor/agora-rtm-sdk-1.0.0.js"></script>
+<script src="vendor/jquery-3.4.1.min.js"></script>
+<script src="vendor/materialize.min.js"></script>
+    <script src="scripts/firebase.js"></script>
+    <script>
+        let appid = localStorage.getItem('app');
+        let channelid=localStorage.getItem('room');
+        let quality=localStorage.getItem('quality');
+        let name=localStorage.getItem('user');
+        let uid = parseInt(String(new Date().valueOf()).slice(5));
+        let rqRef = firebase.database().ref(`${appid}/${channelid}/rq`);
+        let nameRef = firebase.database().ref(`${appid}/${channelid}/names/${uid}`);
+
+        nameRef.set(name);
+        nameRef.onDisconnect().set(null);
+
+        let tabRef = firebase.database().ref(`${appid}/${channelid}/tab`);
+
+        let $tabs = $('.tabs');
+
+        $(document).ready(function(){
+            $tabs.tabs();
+            $('.tooltipped').tooltip();
+            tabRef.on('value',function(snapshot) {
+                $tabs.tabs('select',snapshot.val());
+            });
+        });
+        function leave(){
+            localStorage.clear();
+            window.location='./index.html';
+        }
+    </script>
+    <script src="scripts/student.js"></script>
+<!--    <script src="scripts/chat.js"></script>-->
+</body>
+</html>

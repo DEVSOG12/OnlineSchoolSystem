@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="styles/materialize.min.css">
+    <link rel="stylesheet" href="styles/login.css">
+    <script>
+        if (localStorage.getItem('room')!==null){
+            if(localStorage.getItem('teacher')!=="false")
+                window.location='./teacher.html';
+            else
+                window.location='./student.html';
+        }
+    </script>
+    <title>School System By TB_OS</title>
+</head>
+<body style="min-height: 90vh;background-image: url(assets/background.jpg);background-size: cover;overflow-x: hidden;">
+
+<nav>
+    <div class="nav-wrapper white">
+        <a href="#" class="brand-logo">
+            <img style="height: 155px;margin-top: -45px;width: auto;padding-left: 15px;" src="https://d3jlwjv6gmyigl.cloudfront.net/images/2019/11/school1.jpg">
+        </a>
+        <h6 class="grey-text darken-4 hide-on-med-and-down" style="margin:0; padding-top: 23px;padding-left: 200px;">School System BY TB_OS</h6>
+    </div>
+</nav>
+<div class="row">
+    <div class="col s12 m6 l4 offset-l4 offset-m3">
+        <div class="card" style="margin-top: 50px;">
+            <div class="card-content">
+                <!--<span class="card-title"></span>-->
+                <div class="row">
+                    <form id="config">
+                        <div class="input-field s12">
+                            <div style="display: flex; align-items: center; justify-content: center; flex-flow: column; height: 100%;"><img src="https://d3jlwjv6gmyigl.cloudfront.net/images/2019/11/school1.jpg" alt="logo" style="width: 110px; height: 100px;"><span style="height: 16px; width: 64px; margin-top: 16px;"></span></div>
+                        </div>
+                        <div class="input-field col s12" style="display: none;">
+                            <input id="app_id" type="text" value="37f72b1a467641919a7caaa0d96b1345">
+                            <label for="app_id">App ID</label>
+                        </div>
+                        <div class="input-field col s12">
+                            <input id="room_name" type="text" value="Enter Class Name">
+                            
+                            <label for="room_name">Room Name</label>
+                        </div>
+                        <div class="input-field col s12">
+                            <input id="user_name" type="text" required>
+                            <label for="user_name">User Name</label>
+                        </div>
+                        <div style="padding: 6.5px;margin-bottom: 10px;visibility: hidden;">
+                            <span>Global Quality preset: </span>
+                            <span>
+                            <label>
+                                <input class="with-gap" name="quality" value="480p_2" type="radio" checked />
+                                <span>480p</span>
+                            </label>
+                        </span>
+                            <span>
+                            <label>
+                                <input class="with-gap" name="quality" value="720p_2" type="radio" />
+                                <span>720p</span>
+                            </label>
+                        </span>
+                        </div>
+                        <div class="switch">
+                            <label style="padding-left: 10.875px;">
+                                Student
+                                <input id="ba" type="checkbox">
+                                <span class="lever"></span>
+                                Teacher
+                            </label>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div id="join" class="card-action">
+                <a href="#" style="color: #203c84">Join / Start the class</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="vendor/jquery-3.4.1.min.js"></script>
+<script src="vendor/materialize.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('#join').click(function () {
+            if($('#config')[0].reportValidity()){
+                localStorage.setItem('room', $('#room_name').val().toLowerCase());
+                localStorage.setItem('user', $('#user_name').val());
+                localStorage.setItem('teacher', $('#ba').is(":checked"));
+                localStorage.setItem('quality', $("input[name='quality']:checked").val());
+                localStorage.setItem('app', $('#app_id').val());
+                if(localStorage.getItem('teacher')!=="false")
+                    window.location='./teacher.html';
+                else
+                    window.location='./student.html';
+            }
+        });
+    });
+</script>
+</body>
+</html>

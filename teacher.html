@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:v-bind="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script>
+        if (localStorage.getItem('room')===null||localStorage.getItem('teacher')===false){
+            window.location='./index.html';
+        }
+    </script>
+    <style type="text/css">
+        body {
+            width: 100%;
+            margin: 0;
+        }
+
+        #board, #video {
+            width: 100%;
+            height: 80vh;
+        }
+
+        .minimized-video {
+            width: 90%;
+            height: 150px;
+            margin: 5px auto;
+        }
+
+        .minimized-video video {
+            transform: none !important;
+        }
+
+        #slide-out {
+            transition: transform 0.2s;
+        }
+
+        #main {
+            transition: margin-left 0.2s;
+        }
+
+        .hidden {
+            visibility: hidden;
+        }
+
+        .indicator {
+            display: none !important;
+        }
+
+        .disabled img {
+            opacity: 0.3 !important;
+        }
+    </style>
+    <link rel="stylesheet" href="styles/materialize.min.css">
+    <link rel="stylesheet" href="styles/chat.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+          rel="stylesheet">
+    <style type="text/css">
+        body {
+            width: 100%;
+            margin: 0;
+        }
+        #me div{
+            border-radius:50%;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        #sketchpad {
+            right: 0;
+            width: 100%;
+            height: 640px;
+            border: 1px solid rgba(128, 128, 128, 1);
+            background-color: black;
+        }
+
+        .localPlayer {
+            width: 100%;
+        }
+
+        .localPlayer video {
+            transform: none !important;
+        }
+
+        #sketchpad > img:nth-child(10) {
+            display: none;
+        }
+
+        .placeholder {
+            display: block;
+            width: 100%;
+            height: 150px;
+            background-color: rgba(0, 0, 0, 0.3);
+        }
+
+        .minimized-video {
+            width: 150px;
+            height: 150px;
+            margin: 5px auto;
+            border: black dashed 1px;
+            border-radius: 50%;
+        }
+        .minimized-video div{
+            border-radius: 50%;
+            transform: rotateY(180deg);
+        }
+
+        .minimized-video video {
+            transform: none !important;
+        }
+
+        #palbtn {
+            position: absolute;
+            right: 20px;
+            bottom: 10px;
+            background-color: #3096ff;
+            z-index: 10;
+        }
+
+        .vid-control {
+            width: 100%;
+            text-align: center;
+        }
+
+        .vid-up {
+            transform: rotateZ(-90deg);
+        }
+
+        .vid-down {
+            transform: rotateZ(90deg);
+        }
+
+        #stud_vids {
+            margin: 0;
+            padding: 0;
+            overflow-y: scroll;
+        }
+
+        #privileged-audience {
+            position: absolute;
+            top: 50px;
+            right: 0;
+            z-index: 50;
+        }
+
+        .title {
+            display: block;
+            margin-top: 7px;
+        }
+
+        #privileged-audience .collection .collection-item {
+            margin-bottom: -22px;
+            margin-right: -19px;
+        }
+
+        .greyed-out {
+            filter: grayscale(100%);
+        }
+
+        .hover {
+            display: none;
+        }
+
+        .collection:hover .collection-item {
+            padding-right: 70px !important;
+            margin-right: 0 !important;
+
+        }
+
+        .collection:hover .hover {
+            display: block;
+        }
+    </style>
+</head>
+<body style="background-image: url(assets/background.jpg);background-size: cover; background-attachment: fixed; ">
+
+<div id="list-app">
+    <ul ref="slide" id="slide-out" class="sidenav sidenav-fixed no-autoinit" style="transform:translateX(-100%);">
+        <h6 class="center-align">Viewing {{start+1}} to {{end}} out of {{len}}</h6>
+        <button :class="{ disabled: isAtStart }" id="batch_down" class="vid-control waves-effect btn-flat"
+                @click="ensure(-sz)">
+            <i class="material-icons vid-up">fast_forward</i>
+        </button>
+        <button :class="{ disabled: isAtStart }" id="one_down" class="vid-control waves-effect btn-flat"
+                @click="ensure(-1)">
+            <i class="material-icons vid-up">play_arrow</i>
+        </button>
+        <li id="stud_vids" class="card-panel" style="height: calc(100vh - 196px);">
+            <div v-for="id in currIds" v-bind:id="id" v-bind:key="id" class="minimized-video">
+                <p style="transform:translateX(-50%);margin: 0;position: absolute;color: white;z-index: 30;padding: 5px;background: #0000004f;">
+                    {{names[id]}}
+                </p>
+            </div>
+        </li>
+        <button :class="{ disabled: isAtEnd }" id="one_up" class="vid-control waves-effect btn-flat"
+                style="position: absolute;bottom:61px;transform: translateY(-100%)" @click="ensure(1)">
+            <i class="material-icons vid-down">play_arrow</i>
+        </button>
+        <button :class="{ disabled: isAtEnd }" id="batch_up" class="vid-control waves-effect btn-flat"
+                style="position: absolute;bottom:25px;transform: translateY(-100%)" @click="ensure(sz)">
+            <i class="material-icons vid-down">fast_forward</i>
+        </button>
+    </ul>
+
+    <div id="privileged-audience">
+        <ul class="collection">
+            <li v-if="raise" class="collection-item avatar enable-expand">
+                <img :src="imgLoc" alt="" class="circle" :class="{'greyed-out':!raised}">
+                <span class="title hover">{{names[raise]}}</span>
+                <a href="#!" class="secondary-content hover"><i @click="grant" v-if="!raised" class="material-icons">done</i><i @click="revoke" class="material-icons red-text">close</i></a>
+            </li>
+        </ul>
+    </div>
+</div>
+<div id="main" class="row">
+    <div class="col s12" style="padding: 0;margin-bottom: 15px;background-color: #fff">
+        <button id="trigger" @click="open=!open" class="btn-flat no-autoinit"><i class="material-icons">group</i>
+        </button>
+        <ul id="tab" class="tabs" style="width: calc(100% - 112px);display: inline-flex;">
+            <li class="tab col s3"><a href="#test1">Whiteboard</a></li>
+            <li class="tab col s3"><a href="#test2">Stream Video</a></li>
+            <li class="tab col s3"><a href="#test3">Stream PDF</a></li>
+        </ul>
+        <button class="btn-flat sidenav-trigger" onclick="leave();"><i class="material-icons">input</i></button>
+    </div>
+    <div id="test1" class="col s9">
+        <div id="whiteboard">
+            <div class="row" style="position: relative;">
+                <div class="col s12">
+                    <!-- SketchpadJS container here: -->
+                    <div style="background-color: black;">
+                        <div id="sketchpad"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="modal1" class="card-panel row">
+            <div class="col s4">
+                <p class="range-field">
+                    Size: <input id="size" type="range" min="0.5" max="100" value="1" step="0.1"/>
+                </p>
+            </div>
+            <div class="col s4">
+                <p>Pen:</p>
+                <div id="colorpalette" class="colorpalette" style="overflow: hidden;"></div>
+            </div>
+            <div class="col s4">
+                <p style="text-align: right;">
+                    Erase:
+                    <span id="eraser" class="btn-flat eraser center-block"><i
+                            class="material-icons">delete_outline</i></span>
+                </p>
+            </div>
+        </div>
+    </div>
+    <div id="test2" class="col s9">
+        <div id="localVideo" class="container">
+            <div class="row">
+                <div class="file-field input-field">
+                    <div class="btn">
+                        <span>Stream Video</span>
+                        <input @change="start" ref="file" id="file" type="file">
+                    </div>
+                    <div class="file-path-wrapper">
+                        <input class="file-path validate" type="text">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <video id="temp" class="localPlayer" ref="temp" controls></video>
+            </div>
+        </div>
+    </div>
+    <div id="test3" class="col s9">
+        <div class="container">
+            <div class="row">
+                <div class="file-field input-field">
+                    <div class="btn">
+                        <span>Stream PDF</span>
+                        <input @change="start" id="pdf" type="file">
+                    </div>
+                    <div class="file-path-wrapper">
+                        <input class="file-path validate" type="text">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div>
+                    <button id="prev">Previous</button>
+                    <button id="next">Next</button>
+                    &nbsp; &nbsp;
+                    <span>Page: <span id="page_num"></span> / <span id="page_count"></span></span>
+                </div>
+                <canvas id="the-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col s3">
+
+        <div id="me" style="height: 200px;width:200px;position: relative;margin: 0 auto;">
+            <button :class="{ disabled: loading }" id="teach-mute" class="btn-floating waves-effect unmuted"
+                    @click="toggleAudio()"
+                    style="position: absolute;right:5px;bottom:5px;background-color: rgba(255,255,255,0.70)">
+                <i v-if="audio" class="material-icons black-text">volume_up</i>
+                <i v-else class="material-icons black-text">volume_off</i>
+            </button>
+        </div>
+
+        <div id="chat" class="card-panel">
+            <div id="scrollWrap" ref="scroll">
+                <div v-for="msg in messages" class="messageWrap">
+                    <div class="message"
+                         :class="{'user':msg.isLocal, 'bot':!msg.isLocal, 'teacher': msg.isTeacher, 'student':!msg.isTeacher}">
+                        <span class="message-text">
+                            {{msg.usr}}<hr>
+                            {{msg.message}}
+                        </span>
+                        <div class="triangle"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="inputWrap">
+                <div id="input" class="input-field col s12" style="position: relative;">
+                    <div class="circle-wrap">
+                        <input :class="{disabled:disabled}" @keyup.enter="sendMsg()" v-model="text" id="typeMsg" type="text" placeholder="Type ...">
+                    </div>
+                    <a id="send" :class="{disabled:disabled}" @click="sendMsg()" class="btn btn-floating"><i class="material-icons">send</i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!--<h1 id="uid">-->
+<!--    uid is : {{message}}-->
+<!--</h1>-->
+
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<!--    <script src="https://unpkg.com/vuex@3.1.1/dist/vuex.js"></script>-->
+<script src="https://www.gstatic.com/firebasejs/6.5.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/6.3.5/firebase-database.js"></script>
+<script src="vendor/agora-rtm-sdk-1.0.0.js"></script>
+<script src="vendor/AgoraRTCSDK-2.8.0.js"></script>
+<script src="vendor/materialize.min.js"></script>
+<script src="vendor/sketchpad.min.js"></script>
+<script src="scripts/firebase.js"></script>
+<script src="vendor/pdf.js"></script>
+<script>
+    let appid = localStorage.getItem('app');
+    let channelid = localStorage.getItem('room');
+    let quality = localStorage.getItem('quality');
+    let name = localStorage.getItem('user');
+    let uid = parseInt(String(new Date().valueOf()).slice(5));
+    let tabRef = firebase.database().ref(`${appid}/${channelid}/tab`);
+    let namesRef = firebase.database().ref(`${appid}/${channelid}/names`);
+    let raisedRef = firebase.database().ref(`${appid}/${channelid}/raised`);
+    let rqRef = firebase.database().ref(`${appid}/${channelid}/rq`);
+    let nameRef = firebase.database().ref(`${appid}/${channelid}/names/${uid}`);
+    nameRef.set(name);
+    nameRef.onDisconnect().set(null);
+    Vue.nextTick(function () {
+        tabRef.set('test1');
+        let tab = document.getElementById('tab');
+        var instance = M.Tabs.init(tab,{
+            onShow:e => {
+                tabRef.set(e.id);
+                localVideo.tab = e.id;
+            }
+        });
+    });
+    function leave(){
+        localStorage.clear();
+        window.location='./index.html';
+    }
+</script>
+<script src="scripts/ping.js"></script>
+<script src="scripts/teacher.js"></script>
+<script src="scripts/chat.js"></script>
+<script src="scripts/whiteboard.js"></script>
+<script src="scripts/localVideo.js"></script>
+<script src="scripts/localPDF.js"></script>
+</body>
+</html>

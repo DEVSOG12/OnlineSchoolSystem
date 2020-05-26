@@ -1,0 +1,127 @@
+#chat{
+    background-color: #EEEEEE;
+    height: 60vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: 0;
+}
+#messageWrap{
+    display: flex;
+}
+#inputWrap{
+
+}
+#input{
+    display: flex;
+    justify-content: center;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+#send{
+    margin: 14px 5px;
+    width: 50px;
+    height: 40px;
+    background-color: #3096ff;
+}
+.circle-wrap{
+    border: #3096ff 2px solid;
+    border-radius: 22px;
+    padding: 0 15px;
+    width: calc(100% - 20px);
+    margin: 10px;
+    height: calc(100% - 20px);
+}
+#typeMsg{
+    margin: 0;
+    box-shadow: none !important;
+    border : none !important;
+}
+#scrollWrap{
+    overflow-y: scroll;
+    height: calc(60vh - 70px);
+    /*transform: translateY(-70px);*/
+}
+
+#scrollWrap::-webkit-scrollbar
+{
+    width: 4px;
+    background-color: transparent;
+}
+#scrollWrap::-webkit-scrollbar-thumb
+{
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+.messageWrap{
+    position: relative;
+    display: block;
+    overflow:hidden;
+    width: 100%;
+}
+.message{
+    padding: 12px;
+    display: block;
+    position: relative;
+    margin: 15px;
+    border-radius: 5px;
+}
+.message.teacher{
+    background-color: #006edf;
+}
+.message.student{
+    background-color: #0296e6;
+}
+.message.user{
+    float: right;
+}
+.message.bot{
+    float: left;
+}
+@media(max-width: 700px) {
+    .message{
+        max-width: 80%;
+    }
+}
+@media(min-width: 701px) {
+    html{
+        height: 70vh;
+    }
+    .message{
+        max-width: 60%;
+    }
+}
+.message-text{
+    color: white;
+}
+.triangle{
+    width: 0;
+    height: 0;
+    border-style: solid;
+    position: absolute;
+    top: 5px;
+}
+.user .triangle{
+    border-width: 7.5px 0 7.5px 15px;
+    left: 100%;
+}
+.bot .triangle{
+    right: 100%;
+    border-width: 7.5px 15px 7.5px 0;
+}
+.teacher.user .triangle{
+    border-color: transparent transparent transparent #006edf;
+}
+.teacher.bot .triangle{
+    border-color: transparent #006edf transparent transparent;
+}
+.student.user .triangle{
+    border-color: transparent transparent transparent #0296e6;
+}
+.student.bot .triangle{
+    border-color: transparent #0296e6 transparent transparent;
+}
+.wrapper{
+    width: 100%;
+    display: block;
+}
